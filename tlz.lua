@@ -2,6 +2,42 @@ require "32log"
 
 tlz = {}
 -----------------
+--Revision Temp--
+function tlz.clearTable(table)
+	for key in pairs(table) do
+		table[key] = nil
+	end
+end
+
+function tlz.HSL2RGB(hue,sat,lum)
+	local c = (1 - math.abs(2 * lum - 1)) * sat
+	local h = hue/60
+	local x = c * (1 - math.abs(h % 2 - 1))
+	local m = lum - 0.5 * c
+	
+	c = c + m
+	x = x + m
+	
+	c = c * 255
+	x = x * 255
+	m = m * 255
+	
+	h = math.floor(h + 1)
+	
+	local r = {c,x,m,m,x,c}
+	local g = {x,c,c,x,m,m}
+	local b = {m,m,x,c,c,x}
+
+	return r[h],g[h],b[h]
+end
+
+function tlz.flipDir(dir,xf,yf)
+	dir = math.rad(dir)
+	dir = math.atan2(math.sin(dir) * yf,math.cos(dir) * xf)
+	return math.deg(dir)
+end
+
+-----------------
 -- Misc. TOOLZ --
 tlz.SCREEN_WIDTH = love.graphics.getWidth()
 tlz.SCREEN_HEIGHT = love.graphics.getHeight()
@@ -13,11 +49,6 @@ tlz.BLACK = {R = 9, G = 9, B = 17}
 tlz.WHITE = {R = 255, G = 255, B = 229}
 
 tlz.NILFUNCTION = function() end
-function tlz.wipeTable(t)
-	for i in pairs(t) do
-		t[i] = nil
-	end	
-end
 
 tlz.SQRT2 = math.sqrt(2)
 tlz.NANSTRING = tostring(math.sqrt(-1))
@@ -605,7 +636,7 @@ function Collider:update(dt)
 		end
 		
 		if v.uniqueID then self.uniqueID[v.uniqueID] = nil end
-		if v.removeFromScene then tlz.wipeTable(v) end
+		if v.removeFromScene then tlz.clearTable(v) end
 	end
 	self.toRemove = {}
 end
