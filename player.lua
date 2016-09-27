@@ -1,3 +1,5 @@
+require "input"
+
 class "PlayerBubbleDisplay" : extends(Sprite){}
 function PlayerBubbleDisplay:load()
 	if not self.loaded then
@@ -112,12 +114,12 @@ function PlayerBubble:onCollision(other, data)
 	if self.alpha == 1 then
 		other.sheathSword = true
 		if self.centers then
-			if distance <= self.interactionRadius and (tlz.kP(tlz.A) or tlz.kP(tlz.B))
+			if distance <= self.interactionRadius and (input:isDown(1, "a"))
 				and other.canInteract and self.canInteract then
 				self.interact(self.parent)
 			end
 		else
-			if distance - other.radius <= self.parent.radius + self.interactionRadius and (tlz.kP(tlz.A) or tlz.kP(tlz.B))
+			if distance - other.radius <= self.parent.radius + self.interactionRadius and (input:isDown(1, "a"))
 				and other.canInteract and self.canInteract then
 				self.interact(self.parent)
 			end
@@ -491,23 +493,23 @@ function Player:updateMovement(dt,canMove)
 	self.inputVector[3] = 0
 	self.inputVector[4] = 0
 
-	if tlz.k(tlz.RIGHT) and not tlz.k(tlz.LEFT) and canMove then
+	if input:isDown(1, "dpright") and not input:isDown(1, "dpleft") and canMove then
 		self.inputVector[3] = 1 * self.movAcl * dt
 	elseif self.xVel > 0 then
 		self.inputVector[1] = math.max(0,self.inputVector[1] - self.movAcl * dt)
 	end
-	if tlz.k(tlz.LEFT) and not tlz.k(tlz.RIGHT) and canMove then
+	if input:isDown(1, "dpleft") and not input:isDown(1,"dpright") and canMove then
 		self.inputVector[3] = -1 * self.movAcl * dt
 	elseif self.xVel < 0 then
 		self.inputVector[1] = math.min(self.inputVector[1] + self.movAcl * dt,0)
 	end
 	
-	if tlz.k(tlz.DOWN) and not tlz.k(tlz.UP) and canMove then
+	if input:isDown(1, "dpdown") and not input:isDown(1, "dpup") and canMove then
 		self.inputVector[4] = 1 * self.movAcl * dt
 	elseif self.yVel > 0 then
 		self.inputVector[2] = math.max(0,self.inputVector[2] - self.movAcl * dt)
 	end
-	if tlz.k(tlz.UP) and not tlz.k(tlz.DOWN) and canMove then
+	if input:isDown(1, "dpup") and not input:isDown(1, "dpdown") and canMove then
 		self.inputVector[4] = -1 * self.movAcl * dt
 	elseif self.yVel < 0 then
 		self.inputVector[2] = math.min(self.inputVector[2] + self.movAcl * dt,0)
@@ -575,9 +577,9 @@ function Player:update(dt)
 	self.shove.vL = vL
 	
 	if self.sword.timeInState > 0.05 and self.sword.state == 'idle' then
-		if tlz.kP(tlz.A) then
+		if input:isDown(1, "leftshoulder") then
 			self.sword:setState('swing',-1)
-		elseif tlz.kP(tlz.B) then
+		elseif input:isDown(1, "rightshoulder") then
 			self.sword:setState('swing',1)
 		end
 	end
