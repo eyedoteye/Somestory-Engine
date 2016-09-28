@@ -157,17 +157,17 @@ function Doormat:init_collider()
 end
 function Doormat:updateEndFrameTransition(dt)	
 	self.transitionTime = self.transitionTime + dt
-	self.overlayAlpha = tlz.scale(0.8,self.transitionTime,1.5)
+	self.overlayAlpha = 1 - easer:scale(0.8,self.transitionTime,1.5)
 
-	self.overlayY = self.transitionTime * (1 - tlz.scale(0,self.transitionTime,3)) * 30
+	self.overlayY = self.transitionTime * (1 - 1 - easer:scale(0,self.transitionTime,3)) * 30
 	if self.transitionTime > 1.5 then self.transitionTime = 1.5 end
 	
 	local player = self.collider.uniqueID.Player
-	local scale = math.min(tlz.scale(0,self.whiteOutTime,0.6),0.6)
+	local scale = math.min(1 - easer:scale(0,self.whiteOutTime,0.6),0.6)
 	
 	self.whiteOutTime = self.whiteOutTime + dt
 	
-	scale = tlz.scale(0,self.whiteOutTime,0.6)
+	scale = 1 - easer:scale(0,self.whiteOutTime,0.6)
 	self.scene.fgAlpha = scale
 	self.scene.bgAlpha = scale
 	self.scene.alpha = scale
@@ -206,16 +206,17 @@ function Doormat:updateEndFrameOpen(dt)
 			self.transportSpace.solid = false
 		end
 		
-		self.overlayAlpha = tlz.scale(0.8,self.transitionTime,1.5)
+		self.overlayAlpha = 1 - easer:scale(0.8,self.transitionTime,1.5)
 
-		self.overlayY = self.transitionTime * (1 - tlz.scale(0,self.transitionTime,3)) * 30
+		self.overlayY = self.transitionTime * easer:scale(0,self.transitionTime,3) * 30
 		self.transportSpace.y = self.overlayY + self.y + self.transportSpaceY
 		if self.transitionTime > 1.5 then self.transitionTime = 1.5 end
 		
 		local player = self.collider.uniqueID.Player
 		
 		if player.x - player.radius > self.wall1.x and player.x + player.radius < self.wall2.x then
-			local scale = tlz.scale(0,player.y - self.entryWay.y,3) * 0.7 + tlz.scale(3,player.y - self.entryWay.y,16) * 0.3
+			local scale = easer:scale(0,player.y - self.entryWay.y,3) * 0.7 + easer:scale(3,player.y - self.entryWay.y,16) * 0.3
+      scale = 1 - scale
 			self.moveScale = math.min(scale,0.6) + 0.4
 			player.moveScale = math.min(self.moveScale,self.transferedMoveScale)
 			
@@ -245,9 +246,9 @@ function Doormat:updateEndFrameOpen(dt)
 		end
 		self.transitionTime = self.transitionTime - dt
 		
-		self.overlayAlpha = tlz.scale(0.8,self.transitionTime,1.5)
+		self.overlayAlpha = 1 - easer:scale(0.8,self.transitionTime,1.5)
 
-		self.overlayY = self.transitionTime * (1 - tlz.scale(0,self.transitionTime,3)) * 30
+		self.overlayY = self.transitionTime * (1 - 1 - easer:scale(0,self.transitionTime,3)) * 30
 		self.transportSpace.y = self.overlayY + self.y + self.transportSpaceY
 		if self.transitionTime < 0 then
 			self.cap:setState('')
@@ -258,13 +259,13 @@ function Doormat:updateEndFrameOpen(dt)
 	
 	if self.transfered then		
 		local player = self.collider.uniqueID.Player
-		local scale = tlz.scale(-2,self.whiteOutTime,0)
+		local scale = 1 - easer:scale(-2,self.whiteOutTime,0)
 		self.transferedMoveScale = math.min(scale,0.6) + 0.4
 		player.moveScale = math.min(self.moveScale,self.transferedMoveScale)
 	
 		self.whiteOutTime = self.whiteOutTime - dt
 	
-		scale = tlz.scale(0,self.whiteOutTime,0.6)
+		scale = 1 - easer:scale(0,self.whiteOutTime,0.6)
 		player.scene.fgAlpha = scale
 		player.scene.bgAlpha = scale
 		player.scene.alpha = scale

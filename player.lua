@@ -607,7 +607,8 @@ function Player:updateEndFrame(dt)
 end
 function Player:onCollision(other,data)end
 function Player:drawSprite()
-	local scale = tlz.scale(0,self.parent.hitTime,1)  * .3 + .7
+	local scale = (1 - easer:scale(0,self.parent.hitTime,1))  * .3 + .7
+  --print(self.parent.hitTime,1 - easer:scale(0,self.parent.hitTime,1),1 - easer:scale(0,self.parent.hitTime,1))
 	love.graphics.setColor(255,255,255,255*scale)
 	love.graphics.draw(self.spriteSheet.image,self:getFrame(),math.ceil(self.x),math.ceil(self.y),0,1,1,
 		8,8)

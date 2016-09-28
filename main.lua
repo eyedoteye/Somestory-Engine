@@ -5,11 +5,13 @@ paused = false
 
 require "tlz"
 require "scenes"
+require "easer"
 ---------------------------------
 
 function love.load()
   if arg[#arg] == "-debug" then require("mobdebug").start() end
 	print('loading 0%')
+  
 	tlz.plainYellowBG = love.graphics.newImage("graphics/plainYellow.png")
 	tlz.plainBlackBG = love.graphics.newImage("graphics/plainBlack.png")
 	tlz.frame = 0

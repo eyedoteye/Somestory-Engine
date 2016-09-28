@@ -291,30 +291,30 @@ function Stairs:updateEndFrame(dt)
 	local blackYstart = 140 + self.entryWay1.scene.worldY
 	local blackYend = 188 + self.entryWay1.scene.worldY
 	
-	local scale = tlz.scale(blackYstart,self.entryWay1.scene.y,blackYend)
+	local scale = 1 - easer:scale(blackYstart,self.entryWay1.scene.y,blackYend)
 	self.entryWay1.scene.bgAlpha = scale
-	scale = tlz.scale(0,player.x - self.entryWay1.x,18)
+	scale = 1 - easer:scale(0,player.x - self.entryWay1.x,18)
 	self.entryWay1.scene.timeScale = scale
-	scale = scale * .8 + tlz.scale(0,self.entryWay1.scene.y,blackYstart) * .2
+	scale = scale * .8 + (1 - easer:scale(0,self.entryWay1.scene.y,blackYstart)) * .2
 	self.entryWay1.scene.alpha = scale
-	scale = 1 - tlz.scale(18,player.x - self.entryWay1.x,18+12)
+	scale = easer:scale(18,player.x - self.entryWay1.x,18+12)
 	self.collider:moveSceneTo(self.entryWay1.scene,nil,scale * (self.entryWay1.scene.height + self.entryWay2.scene.worldY) + self.entryWay1.scene.worldY,0.7)
 	
 	blackYstart = self.entryWay1.scene.height - blackYstart - self.entryWay2.scene.height
 	blackYend = self.entryWay1.scene.height - blackYend - self.entryWay2.scene.height
 	
-	scale = 1 - tlz.scale(blackYend,self.entryWay2.scene.y,blackYstart)
+	scale = easer:scale(blackYend,self.entryWay2.scene.y,blackYstart)
 	self.entryWay2.scene.bgAlpha = scale
-	scale = tlz.scale(0,self.entryWay2.x - player.x,17)
+	scale = 1 - easer:scale(0,self.entryWay2.x - player.x,17)
 	self.entryWay2.scene.timeScale = scale
-	scale = scale * .8 + (1 - tlz.scale(blackYstart,self.entryWay2.scene.y,0)) * .2
+	scale = scale * .8 + easer:scale(blackYstart,self.entryWay2.scene.y,0) * .2
 	self.entryWay2.scene.alpha = scale
-	scale = tlz.scale(17,self.entryWay2.x - player.x,17+12)
+	scale = 1 - easer:scale(17,self.entryWay2.x - player.x,17+12)
 	self.collider:moveSceneTo(self.entryWay2.scene,nil,scale * (self.entryWay2.scene.height + self.entryWay2.scene.worldY) - self.entryWay2.scene.height,0.7)
 	
-	scale = 1 - tlz.scale(self.exitWay1.x,player.x,self.exitWay2.x)
+	scale = easer:scale(self.exitWay1.x,player.x,self.exitWay2.x)
 	local camX = (self.entryWay2.scene.worldX - self.entryWay1.scene.worldX) * scale + self.entryWay1.scene.worldX
-	scale = tlz.scale(self.exitWay2.y+1,player.y,self.exitWay1.y)
+	scale = 1 - easer:scale(self.exitWay2.y+1,player.y,self.exitWay1.y)
 	local camY = (self.entryWay2.scene.worldY - self.entryWay1.scene.worldY) * scale + self.entryWay1.scene.worldY
 	self.collider:moveCameraTo(camX,camY,1)
 end
@@ -707,17 +707,17 @@ function Door:init_collider()
 end
 function Door:updateEndFrameTransition(dt)	
 	self.transitionTime = self.transitionTime + dt
-	self.alpha = tlz.scale(0.8,self.transitionTime,1.5)
+	self.alpha = 1 - easer:scale(0.8,self.transitionTime,1.5)
 
-	self.doorOverlayY = -self.transitionTime * (1 - tlz.scale(0,self.transitionTime,3)) * 30
+	self.doorOverlayY = -self.transitionTime * easer:scale(0,self.transitionTime,3) * 30
 	if self.transitionTime > 1.5 then self.transitionTime = 1.5 end
 	
 	local player = self.collider.uniqueID.Player
-	local scale = math.min(tlz.scale(0,self.whiteOutTime,0.6),0.6)
+	local scale = math.min(1 - easer:scale(0,self.whiteOutTime,0.6),0.6)
 	
 	self.whiteOutTime = self.whiteOutTime + dt
 	
-	scale = tlz.scale(0,self.whiteOutTime,0.6)
+	scale = 1 - easer:scale(0,self.whiteOutTime,0.6)
 	
 	self.scene.fgAlpha = scale
 	self.scene.bgAlpha = scale
@@ -748,19 +748,20 @@ end
 function Door:updateEndFrameOpen(dt)
 	if self.entryWay.alpha ~= 0 and not self.closingDoor then
 		self.transitionTime = self.transitionTime + dt
-		
+		if self.transitionTime > 1.5 then self.transitionTime = 1.5 end
 		if self.transitionTime >= 1 / 12 * 9 then
 			self.transportSpace.solid = false
 		end
 		
-		self.alpha = tlz.scale(0.8,self.transitionTime,1.5)
+		self.alpha = 1 - easer:scale(0.8,self.transitionTime,1.5)
 
-		self.doorOverlayY = -self.transitionTime * (1 - tlz.scale(0,self.transitionTime,3)) * 30
+		self.doorOverlayY = -self.transitionTime * easer:scale(0,self.transitionTime,3) * 30
 		self.transportSpace.y = self.doorOverlayY + self.y + self.transportSpaceY
-		if self.transitionTime > 1.5 then self.transitionTime = 1.5 end
+		
 		
 		local player = self.collider.uniqueID.Player
-		local scale = tlz.scale(0,self.entryWay.y - 1 - player.y,3) * 0.7 + tlz.scale(3,self.entryWay.y - 1 - player.y,24) * 0.3
+		local scale = easer:scale(0,self.entryWay.y - 1 - player.y,3) * 0.7 + easer:scale(3,self.entryWay.y - 1 - player.y,24) * 0.3
+    scale = 1 - scale;
 		self.moveScale = math.min(scale,0.6) + 0.4
 		player.moveScale = math.min(self.moveScale,self.transferedMoveScale)
 	
@@ -794,9 +795,9 @@ function Door:updateEndFrameOpen(dt)
 		end
 		self.transitionTime = self.transitionTime - dt
 		
-		self.alpha = tlz.scale(0.8,self.transitionTime,1.5)
+		self.alpha = 1 - easer:scale(0.8,self.transitionTime,1.5)
 
-		self.doorOverlayY = -self.transitionTime * (1 - tlz.scale(0,self.transitionTime,3)) * 30
+		self.doorOverlayY = -self.transitionTime * (easer:scale(0,self.transitionTime,3)) * 30
 		self.transportSpace.y = self.doorOverlayY + self.y + self.transportSpaceY
 		if self.transitionTime < 0 then
 			self.transitionTime = 0
@@ -807,13 +808,13 @@ function Door:updateEndFrameOpen(dt)
 	if self.transfered then
 		self.collider:moveCameraTo(self.scene.worldX,self.scene.worldY,1)
 		local player = self.collider.uniqueID.Player
-		local scale = tlz.scale(-2,self.whiteOutTime,0)
+		local scale = 1 - easer:scale(-2,self.whiteOutTime,0)
 		self.transferedMoveScale = math.min(scale,0.6) + 0.4
 		player.moveScale = math.min(self.moveScale,self.transferedMoveScale)
 	
 		self.whiteOutTime = self.whiteOutTime - dt
 	
-		scale = tlz.scale(0,self.whiteOutTime,0.6)
+		scale = 1 - easer:scale(0,self.whiteOutTime,0.6)
 		player.scene.fgAlpha = scale
 		player.scene.bgAlpha = scale
 		player.scene.alpha = scale
