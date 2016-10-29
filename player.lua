@@ -1,5 +1,3 @@
-require "input"
-
 class "PlayerBubbleDisplay" : extends(Sprite){}
 function PlayerBubbleDisplay:load()
 	if not self.loaded then

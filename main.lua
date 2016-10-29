@@ -6,16 +6,20 @@ paused = false
 require "tlz"
 require "scenes"
 require "easer"
+require "input"
 ---------------------------------
 
 function love.load()
   if arg[#arg] == "-debug" then require("mobdebug").start() end
 	print('loading 0%')
   
+  input:load(1)
+  
 	tlz.plainYellowBG = love.graphics.newImage("graphics/plainYellow.png")
 	tlz.plainBlackBG = love.graphics.newImage("graphics/plainBlack.png")
 	tlz.frame = 0
 	tlz.collider = Collider:new()
+  
 	Player:load()
 
 	tlz.collider:addScene(scenes.home)
