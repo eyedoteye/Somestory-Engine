@@ -7,6 +7,6 @@ Here are some cool gifs from Somestory:
 ![Going upstairs](http://i.imgur.com/y4vQ5qP.gif)  
 ![Cleaning your room](http://i.imgur.com/pw2wEVd.gif)
 
-For playable public builds, you can check out the itch page:
-(Note: The gameplay in the gifs above are not included)
+For playable public builds, you can check out the itch page:  
+(Note: The gameplay in the gifs above are not included)  
 https://ii.itch.io/somestory-protodemo-collection
