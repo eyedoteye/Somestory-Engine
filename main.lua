@@ -6,7 +6,7 @@ paused = false
 require "tlz"
 require "scenes"
 require "easer"
-require "input"
+input = require "input"
 ---------------------------------
 
 function love.load()

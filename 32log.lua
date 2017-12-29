@@ -29,7 +29,7 @@ function class(name)
     end
     return object
   end
-  function newclass:isInstanceOf(class)
+  function newclass:instanceOf(class)
     local super = _G[self.name]
     while super ~= nil do
       if super == class then

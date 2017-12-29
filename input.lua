@@ -120,9 +120,9 @@ function input._gamepad.getAxis(args, axis, flags)
    return 0
 end
 
--- TODO: Implement functions for keyboard presses
--- function input.pressed(player, button) end
--- function input.released(player, button) end
+-- TODO: Figure out what these are for
+function input.pressed(player, button) end
+function input.released(player, button) end
 
 function input.debugString(self)
    local s = "---input---"
@@ -210,3 +210,5 @@ end
 function love.gamepadreleased(joystick, button)
    input:gamepadreleased(joystick, button)
 end
+
+return input
