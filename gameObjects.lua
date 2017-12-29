@@ -98,6 +98,7 @@ function SimpleGobber:load()
 	else
 		self.usedInScenes = self.usedInScenes + 1
 	end
+  print("SimpleGobber used in #scenes: ", self.usedInScenes)
 end
 function SimpleGobber:unload()
 	self.usedInScenes = self.usedInScenes - 1
