@@ -200,13 +200,13 @@ end
 -- Intentional mutation of non-standard global variable 'love'
 -- Implementation of love2d v0.10.2 api:
 --    https://love2d.org/w/index.php?title=love.gamepadpressed&oldid=11895
-function love.gamepadpressed(joystick,button)
-   input:gamepadpressed(joystick,button)
+function love.gamepadpressed(joystick, button)
+   input:gamepadpressed(joystick, button)
 end
 
 -- Intentional mutation of non-standard global variable 'love'
 -- Implementation of love2d v0.10.2 api:
 --    https://love2d.org/w/index.php?title=love.gamepadreleased&oldid=11896
-function love.gamepadreleased(joystick,button)
-   input:gamepadreleased(joystick,button)
+function love.gamepadreleased(joystick, button)
+   input:gamepadreleased(joystick, button)
 end
