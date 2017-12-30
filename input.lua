@@ -17,7 +17,6 @@ local input = {
 
    gamepadHandler = {
       joystickIDToPlayerIndex = {},
-      name = "Gamepad",
       defaultConfig = {
          deadzones = {
             leftx = 0.2,
@@ -26,8 +25,28 @@ local input = {
             righty = 0.2
          }
       }
-   }
+   },
 
+   keyboardMousePlayerIndex = 1,
+
+   keyboardHandler = {
+     buttonToKey = {
+        up = "w",
+        down = "s",
+        left = "a",
+        right = "d",
+        a = "j",
+        b = "k"
+     }
+   },
+
+   mouseHandler = {
+      buttonToMouseButtonIndex = {
+         leftclick = 1,
+         rightclick = 2,
+         middleclick = 3
+      }
+   }
 }
 
 function input.load(self, playerMax)
@@ -68,14 +87,71 @@ function input.joystickremoved(self, joystick)
    end
 end
 
+--- Get input mode of player.
+-- @param playerIndex number: Player number; starts at 1.
+-- @return string: Returns either "keyboardAndMouse", "gamepad", or "none".
+function input.getPlayerMode(self, playerIndex)
+   if (playerIndex == self.keyboardMousePlayerIndex) then
+      return "keyboardAndMouse"
+   end
+
+   if (self.players[playerIndex] ~= nil) then
+      return "gamepad"
+   end
+
+   return "none"
+end
+
 function input.isDown(self, playerIndex, button)
+   if (playerIndex == self.keyboardMousePlayerIndex) then
+      local key = input.keyboardHandler.buttonToKey[button]
+      local mouseButtonIndex = input.mouseHandler.buttonToMouseButtonIndex[button]
+
+      if (key ~= nil) then
+         -- Intentional mutation of non-standard global variable 'love'
+         -- Implementation of love2d v0.10.2 api:
+         --    https://love2d.org/w/index.php?title=love.keyboard.isDown&oldid=15781
+         return love.keyboard.isDown(key)
+      elseif (mouseButtonIndex ~= nil) then
+         -- Intentional mutation of non-standard global variable 'love'
+         -- Implementation of love2d v0.10.2 api:
+         --    https://love2d.org/w/index.php?title=love.mouse.isDown&oldid=16018
+         return love.mouse.isDown(mouseButtonIndex)
+      end
+
+      return false -- Undefined behavior
+   end
+
    local player = self.players[playerIndex]
    return player ~= nil and player.controller.isDown(player.args, button) or false
 end
 
 function input.getAxis(self, playerIndex, axis, flags)
+   if (playerIndex == self.keyboardMousePlayerIndex) then
+      return 0
+   end
+
    local player = self.players[playerIndex]
    return player ~= nil and player.controller.getAxis(player.args, axis, flags) or 0
+end
+
+--- Get position of mouse along the x-axis.
+-- @return number: X-value of mouse coordinate.
+function input.getMouseX()
+   -- Intentional mutation of non-standard global variable 'love'
+   -- Implementation of love2d v0.10.2 api:
+   --    https://love2d.org/w/index.php?title=love.mouse.getX&oldid=7227
+   return love.mouse.getX()
+end
+
+--- Get position of mouse along the y-axis.
+-- Calling with self is optional and does nothing.
+-- @return number: Y-value of mouse coordinate.
+function input.getMouseY()
+   -- Intentional mutation of non-standard global variable 'love'
+   -- Implementation of love2d v0.10.2 api:
+   --     https://love2d.org/w/index.php?title=love.mouse.getY&oldid=7228
+   return love.mouse.getY()
 end
 
 function input.gamepadpressed(self, joystick, button)
@@ -191,31 +267,31 @@ function input.debugString(self)
    return s .. "\n"
 end
 
--- Intentional mutation of non-standard global variable 'love'
--- Implementation of love2d v0.10.2 api:
---    https://love2d.org/w/index.php?title=love.joystickadded&oldid=11897
 function love.joystickadded(joystick)
+   -- Intentional mutation of non-standard global variable 'love'
+   -- Implementation of love2d v0.10.2 api:
+   --    https://love2d.org/w/index.php?title=love.joystickadded&oldid=11897
    input:joystickadded(joystick)
 end
 
--- Intentional mutation of non-standard global variable 'love'
--- Implementation of love2d v0.10.2 api:
---    https://love2d.org/w/index.php?title=love.joystickremoved&oldid=11902
 function love.joystickremoved(joystick)
+   -- Intentional mutation of non-standard global variable 'love'
+   -- Implementation of love2d v0.10.2 api:
+   --    https://love2d.org/w/index.php?title=love.joystickremoved&oldid=11902
    input:joystickremoved(joystick)
 end
 
--- Intentional mutation of non-standard global variable 'love'
--- Implementation of love2d v0.10.2 api:
---    https://love2d.org/w/index.php?title=love.gamepadpressed&oldid=11895
 function love.gamepadpressed(joystick, button)
+   -- Intentional mutation of non-standard global variable 'love'
+   -- Implementation of love2d v0.10.2 api:
+   --    https://love2d.org/w/index.php?title=love.gamepadpressed&oldid=11895
    input:gamepadpressed(joystick, button)
 end
 
--- Intentional mutation of non-standard global variable 'love'
--- Implementation of love2d v0.10.2 api:
---    https://love2d.org/w/index.php?title=love.gamepadreleased&oldid=11896
 function love.gamepadreleased(joystick, button)
+   -- Intentional mutation of non-standard global variable 'love'
+   -- Implementation of love2d v0.10.2 api:
+   --    https://love2d.org/w/index.php?title=love.gamepadreleased&oldid=11896
    input:gamepadreleased(joystick, button)
 end
 
