@@ -23,7 +23,7 @@ function input.joystickadded(self, joystick)
                index = index + 1
             end
 
-            self.players[index] = self._gamepad:newplayer(index,joystick)
+            self.players[index] = self._gamepad:newplayer(index, joystick)
 
             self.size = self.size + 1
             self.index = index + 1
@@ -51,12 +51,12 @@ end
 
 function input.isDown(self, playerIndex, button)
    local player = self.players[playerIndex]
-   return player ~= nil and player.controller.isDown(player.args,button) or false
+   return player ~= nil and player.controller.isDown(player.args, button) or false
 end
 
 function input.getAxis(self, playerIndex, axis, flags)
    local player = self.players[playerIndex]
-   return player ~= nil and player.controller.getAxis(player.args,axis,flags) or 0
+   return player ~= nil and player.controller.getAxis(player.args, axis, flags) or 0
 end
 
 function input.gamepadpressed(self, joystick, button)
@@ -86,10 +86,10 @@ function input._gamepad.newplayer(self, index, joystick, config)
       index = index,
       controller = self,
       args = {
-            joystick = joystick,
-            deadzones = config.deadzones or self.defaultConfig.deadzones
-         }
+         joystick = joystick,
+         deadzones = config.deadzones or self.defaultConfig.deadzones
       }
+   }
 
    self.mapToPlayers[joystick:getID()] = index
 
@@ -125,7 +125,8 @@ function input.pressed(player, button) end
 function input.released(player, button) end
 
 function input.debugString(self)
-   local s = "---input---"
+   local s =
+      "---input---"
       .. "\nsize: " .. self.size
       .. "\ncapacity: " .. self.capacity
       .. "\nindex: " .. self.index
@@ -142,37 +143,37 @@ function input.debugString(self)
 
    for k, v in pairs(self.players) do
       s = s .. "\nPlayer#" .. k
-         .. "\n controller: " .. v.controller.name
+            .. "\n controller: " .. v.controller.name
    end
 
    for k, v in pairs(self._gamepad.mapToPlayers) do
-      local leftx = self:getAxis(v,"leftx")
-      local leftx_raw = self:getAxis(v,"leftx",{raw = true})
-      local lefty = self:getAxis(v,"lefty")
-      local lefty_raw = self:getAxis(v,"lefty",{raw = true})
+      local leftx = self:getAxis(v, "leftx")
+      local leftx_raw = self:getAxis(v, "leftx", {raw = true})
+      local lefty = self:getAxis(v, "lefty")
+      local lefty_raw = self:getAxis(v, "lefty", {raw = true})
 
-      local rightx = self:getAxis(v,"rightx")
-      local rightx_raw = self:getAxis(v,"rightx",{raw = true})
-      local righty = self:getAxis(v,"righty")
-      local righty_raw = self:getAxis(v,"righty",{raw = true})
+      local rightx = self:getAxis(v, "rightx")
+      local rightx_raw = self:getAxis(v, "rightx", {raw = true})
+      local righty = self:getAxis(v, "righty")
+      local righty_raw = self:getAxis(v, "righty", {raw = true})
 
       s = s .. "\nGamepad#" .. k
-         .. "\n player: " .. v
-         .. "\n leftx: " .. leftx
-         .. "\n  raw: " .. leftx_raw
-         .. "\n lefty: " .. lefty
-         .. "\n  raw: " .. lefty_raw
-         .. "\n = left(dir): " .. math.deg(math.atan2(lefty,leftx))
-         .. "\n =       raw: " .. math.deg(math.atan2(lefty_raw,leftx_raw))
-         .. "\n rightx: " .. rightx
-         .. "\n  raw: " .. rightx_raw
-         .. "\n righty: " .. righty
-         .. "\n  raw: " .. righty_raw
-         .. "\n = right(dir): " .. math.deg(math.atan2(righty,rightx))
-         .. "\n =         raw: " .. math.deg(math.atan2(righty_raw,rightx_raw))
-         .. "\n leftshoulder: " .. (self:isDown(k,"leftshoulder") and "true" or "false")
-         .. "\n rightshoulder: " .. (self:isDown(k,"rightshoulder") and "true" or "false")
-         .. "\n start: " .. (self:isDown(k,"start") and "true" or "false")
+            .. "\n player: " .. v
+            .. "\n leftx: " .. leftx
+            .. "\n  raw: " .. leftx_raw
+            .. "\n lefty: " .. lefty
+            .. "\n  raw: " .. lefty_raw
+            .. "\n = left(dir): " .. math.deg(math.atan2(lefty, leftx))
+            .. "\n =       raw: " .. math.deg(math.atan2(lefty_raw, leftx_raw))
+            .. "\n rightx: " .. rightx
+            .. "\n  raw: " .. rightx_raw
+            .. "\n righty: " .. righty
+            .. "\n  raw: " .. righty_raw
+            .. "\n = right(dir): " .. math.deg(math.atan2(righty, rightx))
+            .. "\n =         raw: " .. math.deg(math.atan2(righty_raw, rightx_raw))
+            .. "\n leftshoulder: " .. (self:isDown(k, "leftshoulder") and "true" or "false")
+            .. "\n rightshoulder: " .. (self:isDown(k, "rightshoulder") and "true" or "false")
+            .. "\n start: " .. (self:isDown(k, "start") and "true" or "false")
    end
 
    -- Intentional access of undefined variable 'love'
