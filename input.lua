@@ -1,15 +1,34 @@
+-- TODO: Add support for joystick devices (unrecognized as gamepad)
+-- TODO: Add support for keyboard input
+-- TODO: Add support for mouse input
+
 local function clearTable(table)
    for key in pairs(table) do
       table[key] = nil
    end
 end
 
-local input = {}
-input.players = {}
-input.index = 1
-input.capacity = 2
-input.size = 0
-input.freeIndexes = {}
+local input = {
+   players = {},
+   index = 1,
+   capacity = 2,
+   size = 0,
+   freeIndices = {},
+
+   gamepadHandler = {
+      joystickIDToPlayerIndex = {},
+      name = "Gamepad",
+      defaultConfig = {
+         deadzones = {
+            leftx = 0.2,
+            lefty = 0.2,
+            rightx = 0.2,
+            righty = 0.2
+         }
+      }
+   }
+
+}
 
 function input.load(self, playerMax)
    self.capacity = playerMax
@@ -23,22 +42,22 @@ function input.joystickadded(self, joystick)
                index = index + 1
             end
 
-            self.players[index] = self._gamepad:newplayer(index, joystick)
+            self.players[index] = self.gamepadHandler:newplayer(index, joystick)
 
             self.size = self.size + 1
             self.index = index + 1
-        end
-    end
+         end
+   end
 end
 
 function input.joystickremoved(self, joystick)
    local players = self.players
-   local index = self._gamepad.mapToPlayers[joystick:getID()]
+   local index = self.gamepadHandler.joystickIDToPlayerIndex[joystick:getID()]
 
    if (players[index] ~= nil) then
       clearTable(players[index].args)
       clearTable(players[index])
-      self._gamepad.mapToPlayers[joystick:getID()] = nil
+      self.gamepadHandler.joystickIDToPlayerIndex[joystick:getID()] = nil
       players[index] = nil
 
       if (index < self.index) then
@@ -60,26 +79,14 @@ function input.getAxis(self, playerIndex, axis, flags)
 end
 
 function input.gamepadpressed(self, joystick, button)
-   self.pressed(self._gamepad.mapToPlayers[joystick:getID()],button)
+   self.pressed(self.gamepadHandler.joystickIDToPlayerIndex[joystick:getID()], button)
 end
+
 function input.gamepadreleased(self, joystick, button)
-   self.released(self._gamepad.mapToPlayers[joystick:getID()],button)
+   self.released(self.gamepadHandler.joystickIDToPlayerIndex[joystick:getID()], button)
 end
 
-input._gamepad = {
-   mapToPlayers = {},
-   name = "Gamepad",
-   defaultConfig = {
-      deadzones = {
-         leftx = 0.2,
-         lefty = 0.2,
-         rightx = 0.2,
-         righty = 0.2
-      }
-   }
-}
-
-function input._gamepad.newplayer(self, index, joystick, config)
+function input.gamepadHandler.newplayer(self, index, joystick, config)
    config = config or self.defaultConfig
 
    local player = {
@@ -91,16 +98,16 @@ function input._gamepad.newplayer(self, index, joystick, config)
       }
    }
 
-   self.mapToPlayers[joystick:getID()] = index
+   self.joystickIDToPlayerIndex[joystick:getID()] = index
 
    return player
 end
 
-function input._gamepad.isDown(args, button)
+function input.gamepadHandler.isDown(args, button)
    return args.joystick:isGamepadDown(button)
 end
 
-function input._gamepad.getAxis(args, axis, flags)
+function input.gamepadHandler.getAxis(args, axis, flags)
    local raw = false
 
    if (flags ~= nil) then
@@ -130,10 +137,10 @@ function input.debugString(self)
       .. "\nsize: " .. self.size
       .. "\ncapacity: " .. self.capacity
       .. "\nindex: " .. self.index
-      .. "\nfreeIndexes:"
+      .. "\nfreeIndices:"
 
    local i = 0
-   for _, v in pairs(self.freeIndexes) do
+   for _, v in pairs(self.freeIndices) do
       s = s .. " " .. v
       i = i + 1
    end
@@ -146,7 +153,7 @@ function input.debugString(self)
             .. "\n controller: " .. v.controller.name
    end
 
-   for k, v in pairs(self._gamepad.mapToPlayers) do
+   for k, v in pairs(self.gamepadHandler.joystickIDToPlayerIndex) do
       local leftx = self:getAxis(v, "leftx")
       local leftx_raw = self:getAxis(v, "leftx", {raw = true})
       local lefty = self:getAxis(v, "lefty")
