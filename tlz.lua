@@ -704,6 +704,7 @@ function Collider:draw()
 	scenes.NILSCENE.y = scenes.NILSCENE.y + math.ceil(self.camera.y)
 end
 
+-- TODO: Remove class dependence.
 class "Entity" {x = 0, y = 0}
 function Entity:load() end
 function Entity:unload() end
@@ -722,6 +723,11 @@ end
 	if self.collider then self.collider:remove(self) end
 end]]--
 
+--local Circle = {
+--   x = 0,
+--   y = 0,
+--   radius = 32
+--}
 class "Circle" : extends(Entity){
 	radius = 32,
 }
