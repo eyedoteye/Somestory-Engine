@@ -10,23 +10,23 @@ local collisionSystem = {
 -- entity ids are random floats
 
 -- table: EntityTypeComponent
--- name: EntityTypeComponent
+-- name: EntityType
 -- string: type
 
 -- table: PositionComponent
--- name: PositionComponent
+-- name: Position
 -- number: x
 -- number: y
 
---- table: CollisionComponent
+--- table: ColliderComponent
 -- Circle or CircleLine
 --
 --    table: Circle
---       name: CollisionComponent.Circle
+--       name: Collider.Circle
 --       float: radius
 --
 --    table: CircleLine
---       name: CollisionComponent.CircleLine
+--       name: Collider.CircleLine
 --       float: radius
 --       float: length
 
@@ -174,8 +174,8 @@ end
 --       float: firstDisplacementDistance
 --       float: secondDisplacementDistance
 local function collideEntities(collisionSystem, firstEntity, secondEntity)
-   if firstEntity.colliderComponent.name == "ColliderComponent.Circle" then
-      if secondEntity.colliderComponent.name == "ColliderComponent.Circle" then
+   if firstEntity.colliderComponent.name == "Collider.Circle" then
+      if secondEntity.colliderComponent.name == "Collider.Circle" then
          local isColliding, collisionData = areCirclesColliding(
             firstEntity.positionComponent.x, firstEntity.positionComponent.y, firstEntity.colliderComponent.radius,
             secondEntity.positionComponent.x, secondEntity.positionComponent.y, secondEntity.colliderComponent.radius
@@ -213,14 +213,14 @@ local function collideEntities(collisionSystem, firstEntity, secondEntity)
 
          return isColliding, collisionData
 
-      elseif secondEntity.colliderComponent.name == "ColliderComponent.CircleLine" then
-         print("collideEntities: ColliderComponent.Circle + ColliderComponent.CircleLine not implemented")
+      elseif secondEntity.colliderComponent.name == "Collider.CircleLine" then
+         print("collideEntities: Collider.Circle + Collider.CircleLine not implemented")
       end
-   elseif firstEntity.colliderComponent.name == "ColliderComponent.CircleLine" then
-      if secondEntity.colliderComponent.name == "ColliderComponent.Circle" then
-         print("collideEntities: ColliderComponent.CircleLine + ColliderComponent.Circle not implemented")
-      elseif secondEntity.colliderComponent.name == "ColliderComponent.CircleLine" then
-         print("collideEntities: ColliderComponent.CircleLine + ColliderComponent.CircleLine not implemented")
+   elseif firstEntity.colliderComponent.name == "Collider.CircleLine" then
+      if secondEntity.colliderComponent.name == "Collider.Circle" then
+         print("collideEntities: Collider.CircleLine + Collider.Circle not implemented")
+      elseif secondEntity.colliderComponent.name == "Collider.CircleLine" then
+         print("collideEntities: Collider.CircleLine + Collider.CircleLine not implemented")
       end
    end
 end
