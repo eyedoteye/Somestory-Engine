@@ -2,32 +2,41 @@ local collisionSystem = {
    collidableMap = {}, -- table[string][string] bool : Maps collidable entity types.
    movableMap = {}, -- table[string][string] bool : Maps movable entity types to their respective mover entity types.
 
-   collisionEntities = {}, -- table: Contains all instantiated components that react witihin the collision system.
+   collisionEntities = {}, -- list: Contains all instantiated components that react witihin the collision system.
    collisionEntitiesSize = 0, -- number: Number of instantiated components within collisionEntities.
+   collisionEntityIDToIndex = {} -- hashmap: Maps collision entity id to index within collisionEntities.
 }
 
--- string: entityTypeComponent
+-- entity ids are random floats
 
--- table: positionComponent
--- float: x
--- float: y
+-- table: EntityTypeComponent
+-- name: EntityTypeComponent
+-- string: type
 
---- table: collisionComponent
+-- table: PositionComponent
+-- name: PositionComponent
+-- number: x
+-- number: y
+
+--- table: CollisionComponent
 -- Circle or CircleLine
 --
 --    table: Circle
+--       name: CollisionComponent.Circle
 --       float: radius
 --
 --    table: CircleLine
+--       name: CollisionComponent.CircleLine
 --       float: radius
 --       float: length
 
 -- TODO:
 --- Adds a collision entity to the collision system.
--- Collision entity {entityTypeComponent, positionComponent, colliderComponent}
+-- Collision entity {id, entityTypeComponent, positionComponent, colliderComponent}
 -- @param entityTypeComponent[string]: Entity type of first colliding entity.
 -- @param positionComponent[table]: Position of first colliding entity.
 -- @param colliderComponent[table]: Collider of first colliding entity.
+-- @return number: Collision entity id.
 function collisionSystem.addCollisionEntity(
    self,
    entityTypeComponent,
@@ -35,13 +44,29 @@ function collisionSystem.addCollisionEntity(
    colliderComponent
 )
    local entity = {
+      id = math.random(),
       entityTypeComponent = entityTypeComponent,
       positionComponent = positionComponent,
-      colliderComponent = colliderComponent
+      colliderComponent = colliderComponent,
    }
 
    self.collisionEntities[self.collisionEntitiesSize] = entity
    self.collisionEntitiesSize = self.collisionEntitiesSize + 1
+
+   return entity.id
+end
+
+function collisionSystem.removeCollisionEntity(self, id)
+   local index = self.collisionEntityIDToIndex[id]
+
+   local replacementEntity = self.collisionEntities[self.collisionEntitiesSize]
+   self.collisionEntityIDToIndex[replacementEntity.id] = index
+   self.collisionEntities[index] = replacementEntity
+
+   self.collisionEntities[self.collisionEntitiesSize] = nil
+   self.collisionEntityIDToIndex[id] = nil
+
+   self.collisionEntitiesSize = self.collisionEntitiesSize - 1
 end
 
 --- Turns on collision checking between two entity types.
@@ -92,8 +117,41 @@ function collisionSystem.isEntityMovableByEntity(self, firstEntityType, secondEn
    return self.movableMap[firstEntityType][secondEntityType]
 end
 
+local function areCirclesColliding(
+   x1, y1, r1,
+   x2, y2, r2
+)
+	local offsetX = x2 - x1
+	local offsetY = y2 - y2
+   local distance = math.sqrt(offsetX * offsetX + offsetY * offsetY)
+
+   local totalRadius = r1 + r2
+
+   local isColliding = false
+   if distance <= totalRadius then
+      isColliding = true
+   end
+
+   local collisionData = {
+      isColliding = isColliding,
+      firstToSecondDirection = {
+         offsetX / distance,
+         offsetY / distance
+      },
+      secondToFirstDirection = {
+         -offsetX / distance,
+         -offsetY / distance
+      },
+      distanceBetweenCenters = distance,
+      firstDisplacementDistance = r2 - distance,
+      secondDisplacementDistance = r1 - distance
+   }
+
+	return isColliding, collisionData
+end
+
 -- TODO: Port this from tlz
---- Checks if two entities are colliding.
+--- Collides two entities and resolves any needed position displacements.
 -- @param firstEntity entity{
 --    entityTypeComponent,
 --    positionComponent,
@@ -109,8 +167,62 @@ end
 --       table: firstToSecondDirection
 --          float: x
 --          float: y
---       float: distanceToProjectedCenter
-function collisionSystem.areEntitiesColliding(self, firstEntity, secondEntity)
+--       table: secondToFirstDirection
+--          float: x
+--          float: y
+--       float: distanceBetweenCenters
+--       float: firstDisplacementDistance
+--       float: secondDisplacementDistance
+local function collideEntities(collisionSystem, firstEntity, secondEntity)
+   if firstEntity.colliderComponent.name == "ColliderComponent.Circle" then
+      if secondEntity.colliderComponent.name == "ColliderComponent.Circle" then
+         local isColliding, collisionData = areCirclesColliding(
+            firstEntity.positionComponent.x, firstEntity.positionComponent.y, firstEntity.colliderComponent.radius,
+            secondEntity.positionComponent.x, secondEntity.positionComponent.y, secondEntity.colliderComponent.radius
+         )
+
+         if collisionSystem:isEntityMovableByEntity(
+            secondEntity.entityTypeComponent.type,
+            firstEntity.entityTypeComponent.type
+         ) then
+            if collisionSystem:isEntityMovableByEntity(
+               firstEntity.entityTypeComponent.type,
+               secondEntity.entityTypeComponent.type
+            ) then
+               collisionData.firstDisplacementDistance = collisionData.firstDisplacementDistance / 2
+               collisionData.secondDisplacementDistance = collisionData.secondDisplacementDistance / 2
+
+               firstEntity.positionComponent.x = firstEntity.positionComponent.x +
+                  collisionData.firstToSecondDirection.x * collisionData.firstDisplacementDistance
+               firstEntity.positionComponent.y = firstEntity.positionComponent.y +
+                  collisionData.firstToSecondDirection.y * collisionData.firstDisplacementDistance
+            end
+            secondEntity.positionComponent.x = secondEntity.positionComponent.x +
+               collisionData.secondToFirstDirection.x * collisionData.secondDisplacementDistance
+            secondEntity.positionComponent.y = secondEntity.positionComponent.y +
+               collisionData.secondToFirstDirection.y * collisionData.secondDisplacementDistance
+         elseif collisionSystem:isEntityMovableByEntity(
+            firstEntity.entityTypeComponent.type,
+            secondEntity.entityTypeComponent.type
+         ) then
+            firstEntity.positionComponent.x = firstEntity.positionComponent.x +
+               collisionData.firstToSecondDirection.x * collisionData.firstDisplacementDistance
+            firstEntity.positionComponent.y = firstEntity.positionComponent.y +
+               collisionData.firstToSecondDirection.y * collisionData.firstDisplacementDistance
+         end
+
+         return isColliding, collisionData
+
+      elseif secondEntity.colliderComponent.name == "ColliderComponent.CircleLine" then
+         print("collideEntities: ColliderComponent.Circle + ColliderComponent.CircleLine not implemented")
+      end
+   elseif firstEntity.colliderComponent.name == "ColliderComponent.CircleLine" then
+      if secondEntity.colliderComponent.name == "ColliderComponent.Circle" then
+         print("collideEntities: ColliderComponent.CircleLine + ColliderComponent.Circle not implemented")
+      elseif secondEntity.colliderComponent.name == "ColliderComponent.CircleLine" then
+         print("collideEntities: ColliderComponent.CircleLine + ColliderComponent.CircleLine not implemented")
+      end
+   end
 end
 
 --- Collides all collision entities with each other and resolves their collisions.
@@ -124,7 +236,7 @@ function collisionSystem.collideAllEntities(self)
 			local collisionEntity1 = self.collisionEntities[i]
 			local collisionEntity2 = self.collisionEntities[ii]
 
-         local isColliding, collisionData = self:areEntitiesColliding(collisionEntity1, collisionEntity2)
+         local isColliding, collisionData = collideEntities(collisionEntity1, collisionEntity2)
 
          if isColliding then
             table.insert(collisions, {collisionEntity1, collisionEntity2, collisionData})

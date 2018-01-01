@@ -1,47 +1,14 @@
-debugMode = false
-drawDebug = false
-stableMemory = true
-paused = false
+local debugMode = false
+local stableMemory = true
+local paused = false
 
-require "tlz"
-require "scenes"
-require "easer"
-input = require "input"
----------------------------------
+inputSystem = require "inputSystem"
+collisionSystem = require "collisionSystem"
 
 function love.load()
-  if arg[#arg] == "-debug" then require("mobdebug").start() end
-	print('loading 0%')
-  
-  input:load(1)
-  
-	tlz.plainYellowBG = love.graphics.newImage("graphics/plainYellow.png")
-	tlz.plainBlackBG = love.graphics.newImage("graphics/plainBlack.png")
-	tlz.frame = 0
-	tlz.collider = Collider:new()
-  
-	Player:load()
-
-	tlz.collider:addScene(scenes.home)
-
-	--tlz.collider:addScene(scenes.home)
-	tlz.noBugsYet = true
-	local playa = Player:new(140,136)
-	tlz.collider:add(playa,scenes.home)
-	tlz.collider:addUniqueID(playa,'Player')
-	--tlz.collider.workingScene = scenes.home
-	--scenes.home:spawn()
-	scenes.home:spawn()
-	--Player.usedInScenes = Player.usedInScenes + 1
-	--scenes.yourRoom.x = scenes.yourRoom.x
-	--scenes.yourRoom.y = scenes.yourRoom.y - tlz.SCREEN_HEIGHT
-	print(scenes.yourRoom.x,scenes.yourRoom.y)
-	love.graphics.setBackgroundColor(9,9,17)
-	print('loading 100%')
 end
 
 function love.draw()
-	tlz.collider:draw()
 	if debugMode then
 		love.graphics.setColor(255,0,0,255 * 0.8)
 		love.graphics.print('Memory(kB): ' .. collectgarbage('count'), 5,5)
@@ -55,47 +22,43 @@ function love.focus(focused)
 	if not debugMode then paused = not focused end
 end
 
-SPF = 1 / 60
+local SPEED_PER_FRAME = 1 / 60
+local frame = 0
+
+local function update(dt)
+   print("frame: " .. frame .. "   dt: " .. dt)
+end
+
 function love.update(dt)
 	if debugMode and stableMemory then
 		collectgarbage()
-	end
+   end
+
 	if not paused then
-		local cap_dt = math.min(dt,SPF)
-		tlz.frame = tlz.frame + 1
-		
-		tlz.collider:update(cap_dt)
-		
-		love.keyboard.resetKeys()
+      frame = frame + 1
+
+      local remainingTime = dt
+
+      while remainingTime > 0 do
+         if remainingTime > SPEED_PER_FRAME then
+            update(SPEED_PER_FRAME)
+            remainingTime = remainingTime - dt
+         else
+            update(remainingTime)
+            remainingTime = 0
+         end
+      end
 	end
 end
 
 function love.keypressed(key)
-	love.keyboard.keysPressed[key] = true
-	--print(key..' pressed '..love.timer.getTime())
 	if key == '`' then
 		debugMode = not debugMode
 	end
 	if key == '1' and debugMode then
 		paused = not paused
-		--[[paused = true
-		love.audio.pause()
-		debug.debug()
-		love.audio.resume()
-		paused = false]]--
 	end
 	if key == '2' and debugMode then
-		drawDebug = not drawDebug
-	end
-	if key == '3' and debugMode then
 		stableMemory = not stableMemory
 	end
-end
-
-function love.keyreleased(key)
-	--print(key..' released '..love.timer.getTime())
-end
-
-function love.mousepressed(x,y,key)
-	--game.mousepressed(x,y,key)
 end
