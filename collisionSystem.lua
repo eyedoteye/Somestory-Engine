@@ -1,3 +1,18 @@
+--[[function rPrint(s, l, i) -- recursive Print (structure, limit, indent)
+	l = (l) or 100; i = i or "";	-- default item limit, indent string
+	if (l<1) then print "ERROR: Item limit reached."; return l-1 end;
+	local ts = type(s);
+	if (ts ~= "table") then print (i,ts,s); return l-1 end
+	print (i,ts);           -- print "table"
+	for k,v in pairs(s) do  -- print "[KEY] VALUE"
+		l = rPrint(v, l, i.."\t["..tostring(k).."]");
+		if (l < 0) then break end
+	end
+	return l
+end]]
+
+
+
 local collisionSystem = {
    collidableMap = {}, -- table[string][string] bool : Maps collidable entity types.
    movableMap = {}, -- table[string][string] bool : Maps movable entity types to their respective mover entity types.
@@ -50,7 +65,7 @@ function collisionSystem.addCollisionEntity(
       colliderComponent = colliderComponent,
    }
 
-   self.collisionEntities[self.collisionEntitiesSize] = entity
+   self.collisionEntities[self.collisionEntitiesSize + 1] = entity
    self.collisionEntitiesSize = self.collisionEntitiesSize + 1
 
    return entity.id
@@ -70,8 +85,8 @@ function collisionSystem.removeCollisionEntity(self, id)
 end
 
 --- Turns on collision checking between two entity types.
--- @param firstEntityType entityTypeComponent[string]: Type name of the first entity to make collidable.
--- @param secondEntityType entityTypeComponent[string]: Type name of the second entity to make collidable.
+-- @param firstEntityType entityTypeComponent: Type name of the first entity to make collidable.
+-- @param secondEntityType entityTypeComponent: Type name of the second entity to make collidable.
 function collisionSystem.makeEntitiesCollidable(self, firstEntityType, secondEntityType)
    self.collidableMap[firstEntityType] = self.collidableMap[firstEntityType] or {}
    self.collidableMap[secondEntityType] = self.collidableMap[secondEntityType] or {}
@@ -80,40 +95,46 @@ function collisionSystem.makeEntitiesCollidable(self, firstEntityType, secondEnt
 end
 
 --- Turns off collision checking between two entity types.
--- @param firstEntityType entityTypeComponent[string]: Type name of the first entity to make uncollidable.
--- @param secondEntityType entityTypeComponent[string]: Type name of the second entity to make uncollidable.
+-- @param firstEntityType entityTypeComponent: Type name of the first entity to make uncollidable.
+-- @param secondEntityType entityTypeComponent: Type name of the second entity to make uncollidable.
 function collisionSystem.unmakeEntitiesCollidable(self, firstEntityType, secondEntityType)
    self.collidableMap[firstEntityType][secondEntityType] = nil
    self.collidableMap[secondEntityType][firstEntityType] = nil
 end
 
 --- Returns if two entity types are collidable.
--- @param firstEntityType entityTypeComponent[string]: Type name of first entity.
--- @param secondEntityType entityTypeComponent[string]: Type name of the second entity.
+-- @param firstEntityType entityTypeComponent: Type name of first entity.
+-- @param secondEntityType entityTypeComponent: Type name of the second entity.
 -- @returns bool: Return true if firstEntityType and secondEntityType are collidable.
 function collisionSystem.areEntitiesCollidable(self, firstEntityType, secondEntityType)
+   if self.collidableMap[firstEntityType] == nil then
+      return false
+   end
    return self.collidableMap[firstEntityType][secondEntityType]
 end
 
 --- Turns on one-way movability between two entity types.
--- @param firstEntityType entityTypeComponent[string]: Type name of entity that will be made the movable.
--- @param secondEntityType entityTypeComponent[string]: Type name of entity that will be made the mover.
+-- @param firstEntityType entityTypeComponent: Type name of entity that will be made the movable.
+-- @param secondEntityType entityTypeComponent: Type name of entity that will be made the mover.
 function collisionSystem.makeEntityMovableByEntity(self, firstEntityType, secondEntityType)
    self.movableMap[firstEntityType] = self.movableMap[firstEntityType] or {}
    self.movableMap[firstEntityType][secondEntityType] = true
 end
 
 --- Turns off one-way movability between two entity types.
--- @param firstEntityType entityTypeComponent[string]: Entity type that will no longer be the movable.
--- @param secondEntityType entityTypeComponent[string]: Entity type that will no longer be the mover.
+-- @param firstEntityType entityTypeComponent: Entity type that will no longer be the movable.
+-- @param secondEntityType entityTypeComponent: Entity type that will no longer be the mover.
 function collisionSystem.unmakeEntityMovableByEntity(self, firstEntityType, secondEntityType)
    self.movableMap[firstEntityType][secondEntityType] = nil
 end
 
 --- Returns if first entity type is movable by second entity type.
--- @param firstEntityType entityTypeComponent[string]: Entity type to be checked for being the movable.
--- @param secondEntityType entityTypeComponent[string]: Entity type to be checked for being the mover.
+-- @param firstEntityType entityTypeComponent: Entity type to be checked for being the movable.
+-- @param secondEntityType entityTypeComponent: Entity type to be checked for being the mover.
 function collisionSystem.isEntityMovableByEntity(self, firstEntityType, secondEntityType)
+   if self.movableMap[firstEntityType] == nil then
+      return false
+   end
    return self.movableMap[firstEntityType][secondEntityType]
 end
 
@@ -122,7 +143,7 @@ local function areCirclesColliding(
    x2, y2, r2
 )
 	local offsetX = x2 - x1
-	local offsetY = y2 - y2
+	local offsetY = y2 - y1
    local distance = math.sqrt(offsetX * offsetX + offsetY * offsetY)
 
    local totalRadius = r1 + r2
@@ -135,16 +156,15 @@ local function areCirclesColliding(
    local collisionData = {
       isColliding = isColliding,
       firstToSecondDirection = {
-         offsetX / distance,
-         offsetY / distance
+         x = -offsetX / distance,
+         y = -offsetY / distance
       },
       secondToFirstDirection = {
-         -offsetX / distance,
-         -offsetY / distance
+         x = offsetX / distance,
+         y = offsetY / distance
       },
       distanceBetweenCenters = distance,
-      firstDisplacementDistance = r2 - distance,
-      secondDisplacementDistance = r1 - distance
+      displacementDistance = totalRadius - distance,
    }
 
 	return isColliding, collisionData
@@ -171,8 +191,7 @@ end
 --          float: x
 --          float: y
 --       float: distanceBetweenCenters
---       float: firstDisplacementDistance
---       float: secondDisplacementDistance
+--       float: displacementDistance
 local function collideEntities(collisionSystem, firstEntity, secondEntity)
    if firstEntity.colliderComponent.name == "Collider.Circle" then
       if secondEntity.colliderComponent.name == "Collider.Circle" then
@@ -181,34 +200,38 @@ local function collideEntities(collisionSystem, firstEntity, secondEntity)
             secondEntity.positionComponent.x, secondEntity.positionComponent.y, secondEntity.colliderComponent.radius
          )
 
-         if collisionSystem:isEntityMovableByEntity(
-            secondEntity.entityTypeComponent.type,
-            firstEntity.entityTypeComponent.type
-         ) then
+         if isColliding then
             if collisionSystem:isEntityMovableByEntity(
-               firstEntity.entityTypeComponent.type,
-               secondEntity.entityTypeComponent.type
+               secondEntity.entityTypeComponent,
+               firstEntity.entityTypeComponent
             ) then
-               collisionData.firstDisplacementDistance = collisionData.firstDisplacementDistance / 2
-               collisionData.secondDisplacementDistance = collisionData.secondDisplacementDistance / 2
 
+               if collisionSystem:isEntityMovableByEntity(
+                  firstEntity.entityTypeComponent,
+                  secondEntity.entityTypeComponent
+               ) then
+                  collisionData.displacementDistance = collisionData.displacementDistance / 2
+
+                  firstEntity.positionComponent.x = firstEntity.positionComponent.x +
+                     collisionData.firstToSecondDirection.x * collisionData.displacementDistance
+                  firstEntity.positionComponent.y = firstEntity.positionComponent.y +
+                     collisionData.firstToSecondDirection.y * collisionData.displacementDistance
+               end
+
+               secondEntity.positionComponent.x = secondEntity.positionComponent.x +
+                  collisionData.secondToFirstDirection.x * collisionData.displacementDistance
+               secondEntity.positionComponent.y = secondEntity.positionComponent.y +
+                  collisionData.secondToFirstDirection.y * collisionData.displacementDistance
+
+            elseif collisionSystem:isEntityMovableByEntity(
+               firstEntity.entityTypeComponent,
+               secondEntity.entityTypeComponent
+            ) then
                firstEntity.positionComponent.x = firstEntity.positionComponent.x +
                   collisionData.firstToSecondDirection.x * collisionData.firstDisplacementDistance
                firstEntity.positionComponent.y = firstEntity.positionComponent.y +
                   collisionData.firstToSecondDirection.y * collisionData.firstDisplacementDistance
             end
-            secondEntity.positionComponent.x = secondEntity.positionComponent.x +
-               collisionData.secondToFirstDirection.x * collisionData.secondDisplacementDistance
-            secondEntity.positionComponent.y = secondEntity.positionComponent.y +
-               collisionData.secondToFirstDirection.y * collisionData.secondDisplacementDistance
-         elseif collisionSystem:isEntityMovableByEntity(
-            firstEntity.entityTypeComponent.type,
-            secondEntity.entityTypeComponent.type
-         ) then
-            firstEntity.positionComponent.x = firstEntity.positionComponent.x +
-               collisionData.firstToSecondDirection.x * collisionData.firstDisplacementDistance
-            firstEntity.positionComponent.y = firstEntity.positionComponent.y +
-               collisionData.firstToSecondDirection.y * collisionData.firstDisplacementDistance
          end
 
          return isColliding, collisionData
@@ -236,7 +259,14 @@ function collisionSystem.collideAllEntities(self)
 			local collisionEntity1 = self.collisionEntities[i]
 			local collisionEntity2 = self.collisionEntities[ii]
 
-         local isColliding, collisionData = collideEntities(collisionEntity1, collisionEntity2)
+         --print("i = .. " .. i .. "   ii = " .. ii)
+         if collisionEntity1 == nil then
+            print("collisionEntity1 == nil   i = " .. i .. "   ii = " .. ii)
+         end
+         if collisionEntity2 == nil then
+            print("collisionEntity2 == nil   i = " .. i .. "   ii = " .. ii)
+         end
+         local isColliding, collisionData = collideEntities(collisionSystem, collisionEntity1, collisionEntity2)
 
          if isColliding then
             table.insert(collisions, {collisionEntity1, collisionEntity2, collisionData})
@@ -247,12 +277,14 @@ function collisionSystem.collideAllEntities(self)
 		i = i + 1
 	end
 
+   --[[
 	for _, collisionPair in pairs(collisions) do
 		collisionPair[1]:onCollision(collisionPair[2], collisionPair[3])
 		collisionPair[3].firstToSecondDirection.x = -collisionPair[3].firstToSecondDirection.x
 		collisionPair[3].firstToSecondDirection.y = -collisionPair[3].firstToSecondDirection.y
 		collisionPair[2]:onCollision(collisionPair[1], collisionPair[3])
-	end
+   end
+   ]]--
 end
 
 return collisionSystem

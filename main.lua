@@ -1,3 +1,7 @@
+
+
+
+
 local debugMode = false
 local stableMemory = true
 local paused = false
@@ -5,11 +9,17 @@ local SPEED_PER_FRAME = 1 / 60
 local frame = 0
 
 
-inputSystem = require "inputSystem"
-collisionSystem = require "collisionSystem"
+local inputSystem = require "inputSystem"
+local collisionSystem = require "collisionSystem"
+
+local systems = {
+   inputSystem = inputSystem,
+   collisionSystem = collisionSystem,
+}
 
 local componentFactory = require "componentFactory"
 local entityFactory = require "entityFactory"
+
 
 
 local entity1 = entityFactory:createEntity(
@@ -22,11 +32,25 @@ local entity1 = entityFactory:createEntity(
 
 local entity2 = entityFactory:createEntity(
    {
-      entityTypeComponent = componentFactory:createComponent("EntityType", {type = "Player"}),
+      entityTypeComponent = componentFactory:createComponent("EntityType", {type = "Ball"}),
       positionComponent = componentFactory:createComponent("Position", {x = 100, y = 50}),
       colliderComponent = componentFactory:createComponent("Collider.Circle", {radius = 10})
    }
 )
+
+collisionSystem:addCollisionEntity(
+   entity1.entityTypeComponent,
+   entity1.positionComponent,
+   entity1.colliderComponent
+)
+collisionSystem:addCollisionEntity(
+   entity2.entityTypeComponent,
+   entity2.positionComponent,
+   entity2.colliderComponent
+)
+
+collisionSystem:makeEntitiesCollidable(entity1.entityTypeComponent, entity2.entityTypeComponent)
+collisionSystem:makeEntityMovableByEntity(entity2.entityTypeComponent, entity1.entityTypeComponent)
 
 function love.load()
 end
@@ -54,9 +78,27 @@ function love.draw()
 end
 
 local function update(dt)
-   print("frame: " .. frame .. "   dt: " .. dt)
+   --print("frame: " .. frame .. "   dt: " .. dt)
 
+   local y = 0
+   local x = 0
+   if inputSystem:isDown(1, "up") then
+      y = y - 1
+   end
+   if inputSystem:isDown(1, "down") then
+      y = y + 1
+   end
+   if inputSystem:isDown(1, "left") then
+      x = x - 1
+   end
+   if inputSystem:isDown(1, "right") then
+      x = x + 1
+   end
+   local speed = 100
+   entity1.positionComponent.x = entity1.positionComponent.x + x * speed * dt
+   entity1.positionComponent.y = entity1.positionComponent.y + y * speed * dt
 
+   collisionSystem:collideAllEntities()
 end
 
 function love.update(dt)
